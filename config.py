@@ -1,50 +1,22 @@
-import os
-from typing import Dict
+from decouple import config
 
-from configparser import ConfigParser
-from pydantic import BaseSettings, HttpUrl, validator
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CFG_FILE_PATH = os.path.join(BASE_DIR, "settings.cfg")
+from pydantic_settings import BaseSettings
 
 
 class CfgSettings(BaseSettings):
     """
-    A class which loads settings from a .cfg file.
+    A class which loads settings from a .env file.
     """
-    AUTHORIZATION_URL: str
-    AUTHORIZATION_GRANT_TYPE: str
-    AUTHORIZATION_CLIENT_ID: str
-    AUTHORIZATION_CLIENT_SECRET: str
 
-    API_FLIGHT_OFFERS_URL: str
-    API_LOCATION_URL: str
+    AUTHORIZATION_URL: str = config("URL")
+    AUTHORIZATION_GRANT_TYPE: str = config("GRANT_TYPE")
+    AUTHORIZATION_CLIENT_ID: str = config("CLIENT_ID")
+    AUTHORIZATION_CLIENT_SECRET: str = config("CLIENT_SECRET")
 
-    DATABASE_URL: str
+    API_AIRPORT_URL: str = config("AIRPORT_URL")
+    API_FLIGHT_OFFERS_URL: str = config("FLIGHT_OFFERS_URL")
 
-
-def load_cfg_settings() -> CfgSettings:
-    """
-    Read configuration settings in ConfigParser format and populate a CfgSettings instance with the values.
-
-    :return: An instance of the populated CfgSettings class.
-    :raises FileNotFoundError: If the configuration file (CFG_FILE_PATH) cannot be loaded.
-    """
-    parser = ConfigParser()
-    loaded = parser.read(CFG_FILE_PATH)
-
-    if not loaded:
-        raise FileNotFoundError(f"Could not load {CFG_FILE_PATH}")
-
-    else:
-        settings_as_dict: Dict[str, str] = dict()
-        for section in parser.sections():
-            section_key = section.upper()
-            for k, v in parser[section].items():
-                full_key = f"{section_key}_{k.upper()}"
-                settings_as_dict[full_key] = v
-
-    return CfgSettings(**settings_as_dict)
+    DATABASE_URL: str = config("DATABASE_URL")
 
 
-settings = load_cfg_settings()
+settings = CfgSettings()

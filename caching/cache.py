@@ -6,7 +6,15 @@ from datetime import datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from sqlalchemy import create_engine, inspect, Column, Integer, String, DateTime, text
+from sqlalchemy import (
+    create_engine,
+    inspect,
+    Column,
+    Integer,
+    String,
+    DateTime,
+    text,
+)
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -17,6 +25,7 @@ CENTRAL_EUROPE_TIME = datetime.now(CENTRAL_EUROPE_TIMEZONE)
 DATABASE_URL = "postgresql://postgres:postgres@localhost/amadeus_flights"
 ENGINE = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
+CLEAR_CACHE_INTERVAL = 30
 
 Base = declarative_base()
 
@@ -37,11 +46,11 @@ class CachedFlightOffer(Base):
     created_at = Column(DateTime, server_default=text("now()"))
 
 
-
 # Create caching table if it isn't created
 inspector = inspect(ENGINE)
 if not inspector.has_table("cached_flight_offers"):
     Base.metadata.create_all(bind=ENGINE)
+
 
 class ArrowJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -66,7 +75,7 @@ def clear_cache_db():
     30 minutes ago from the Central Europe time.
     """
     db = get_cache_db()
-    one_hour_ago = CENTRAL_EUROPE_TIME - timedelta(minutes=10)
+    one_hour_ago = CENTRAL_EUROPE_TIME - timedelta(minutes=30)
     db.query(CachedFlightOffer).filter(
         CachedFlightOffer.created_at < one_hour_ago
     ).delete()
@@ -74,7 +83,7 @@ def clear_cache_db():
 
 
 # Schedule the task to run every 30 minutes
-scheduler.add_job(clear_cache_db, trigger="interval", minutes=1)
+scheduler.add_job(clear_cache_db, trigger="interval", minutes=30)
 
 # Start the scheduler
 scheduler.start()

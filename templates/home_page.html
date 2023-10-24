@@ -11,10 +11,10 @@
 
     <form action="/submit-form" method="post">
         <div class="form-row">
-            <label for="departure">Departure:</label>
-            <input type="text" id="departure" name="departure" class="input-medium" required>
-            <label for="arrival">Arrival:</label>
-            <input type="text" id="arrival" name="arrival" class="input-medium" required>
+            <label for="departure">Departure IATA:</label>
+            <input type="text" id="departure" name="departure" class="input-medium" required pattern="[A-Z]{3}" title="Please enter a 3-letter uppercase code">
+            <label for="arrival">Arrival IATA:</label>
+            <input type="text" id="arrival" name="arrival" class="input-medium" required pattern="[A-Z]{3}" title="Please enter a 3-letter uppercase code">
         </div>
 
         <div class="form-row">
@@ -27,12 +27,12 @@
         <div class="form-row">
             <label for="adult_passengers">Number of Adult Passengers:</label>
             <input type="number" id="adult_passengers" name="adult_passengers" class="input-small" min="1" max="9" required>
-            <label for="kids">Number of Kids:</label>
-            <input type="number" id="kids" name="kids" class="input-small" value="0" min="0" max="9">
+            <label for="kids">Number of Children:</label>
+            <input type="number" id="kids" name="children" class="input-small" value="0" min="0" max="9">
         </div>
 
         <div class="button-container">
-            <button type="submit">Search</button>
+            <button type="submit" class="button">Search</button>
         </div>
     </form>
     <script>
@@ -47,6 +47,18 @@
             dateFromInput.min = minDate;
             dateToInput.min = minDate;
         });
+
+        function removeClass(){
+        myButton.className = myButton.className.replace(new RegExp('(?:^|\\s)loading(?!\\S)'), '');
+        }
+
+        var myButton = document.getElementById('myButton');
+
+
+        myButton.addEventListener("click", function() {
+            myButton.className = myButton.className + ' loading';
+            setTimeout(removeClass, 2000);
+        }, false);
     </script>
 </body>
 </html>

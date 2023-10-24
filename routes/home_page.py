@@ -13,4 +13,5 @@ async def home_page(request: Request):
     :param request: The FastAPI request object.
     :return: A TemplateResponse containing the rendered home page template.
     """
+
     return templates.TemplateResponse("home_page.html", {"request": request})

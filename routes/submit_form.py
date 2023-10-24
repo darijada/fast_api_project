@@ -6,8 +6,8 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from api.amadeus_api import get_location_iata_code, get_flight_offers
-from api.models import FlightRequest, FlightOffer
+from api.amadeus_api import get_flight_offers, get_airport_geolocation
+from api.models import FlightRequest, FlightOffer, FlightRequestError
 from caching.cache import (
     get_cache_db,
     CachedFlightOffer,
@@ -36,8 +36,8 @@ async def submit_form(request: Request, cache_db: Session = Depends(get_cache_db
     """
     form_data = await request.form()
 
-    departure = str(form_data.get("departure")).title()
-    arrival = str(form_data.get("arrival")).title()
+    departure = str(form_data.get("departure"))
+    arrival = str(form_data.get("arrival"))
     date_from = str(form_data.get("date_from"))
     date_to = str(form_data.get("date_to"))
     adult_passengers = int(str(form_data.get("adult_passengers")))
@@ -47,11 +47,12 @@ async def submit_form(request: Request, cache_db: Session = Depends(get_cache_db
         else 0
     )
 
-    departure_iata = await get_location_iata_code(departure)
-    arrival_iata = await get_location_iata_code(arrival)
+    invalid_no_of_passengers = False
+    invalid_dates = False
+
     flight_offers = []
 
-    if departure_iata and arrival_iata:
+    if departure and arrival:
         cached_offers = (
             cache_db.query(CachedFlightOffer)
             .filter(
@@ -71,36 +72,45 @@ async def submit_form(request: Request, cache_db: Session = Depends(get_cache_db
 
             for offer_data in flight_offers_data:
                 offer_data["departure_date"] = arrow.get(offer_data["departure_date"])
-                offer_data["arrival_date"] = (
-                    arrow.get(offer_data["arrival_date"])
-                    if offer_data["arrival_date"]
-                    else ""
+                offer_data["return_date"] = (
+                    arrow.get(offer_data["return_date"])
+                    if offer_data["return_date"]
+                    else None
                 )
                 flight_offers.append(FlightOffer(**offer_data))
         else:
-            flight_request = FlightRequest(
-                origin_location_code=departure_iata,
-                destination_location_code=arrival_iata,
-                departure_date=date_from,
-                return_date=date_to,
-                adults=adult_passengers,
-                children=children,
-            )
-            flight_offers = await get_flight_offers(flight_request)
+            try:
+                flight_request = FlightRequest(
+                    origin_location_code=departure,
+                    destination_location_code=arrival,
+                    departure_date=date_from,
+                    return_date=date_to,
+                    adults=adult_passengers,
+                    children=children,
+                )
 
-            cache_entry = CachedFlightOffer(
-                departure=departure,
-                arrival=arrival,
-                date_from=datetime.strptime(date_from, "%Y-%m-%d"),
-                date_to=datetime.strptime(date_to, "%Y-%m-%d") if date_to else None,
-                adults=adult_passengers,
-                children=children,
-                flight_offers=json.dumps(
-                    [offer.dict() for offer in flight_offers], cls=ArrowJSONEncoder
-                ),
-            )
-            cache_db.add(cache_entry)
-            cache_db.commit()
+                flight_offers = await get_flight_offers(flight_request)
+
+                cache_entry = CachedFlightOffer(
+                    departure=departure,
+                    arrival=arrival,
+                    date_from=datetime.strptime(date_from, "%Y-%m-%d"),
+                    date_to=datetime.strptime(date_to, "%Y-%m-%d") if date_to else None,
+                    adults=adult_passengers,
+                    children=children,
+                    flight_offers=json.dumps(
+                        [offer.model_dump() for offer in flight_offers],
+                        cls=ArrowJSONEncoder,
+                    ),
+                )
+                cache_db.add(cache_entry)
+                cache_db.commit()
+
+            except FlightRequestError:
+                if adult_passengers + children > 9:
+                    invalid_no_of_passengers = True
+                if date_from > date_to:
+                    invalid_dates = True
 
     return templates.TemplateResponse(
         "flight_offers.html",
@@ -112,5 +122,7 @@ async def submit_form(request: Request, cache_db: Session = Depends(get_cache_db
             "arrival": arrival,
             "date_from": datetime.strptime(date_from, "%Y-%m-%d"),
             "date_to": datetime.strptime(date_to, "%Y-%m-%d") if date_to else None,
+            "invalid_no_of_passengers": invalid_no_of_passengers,
+            "invalid_dates": invalid_dates,
         },
     )
