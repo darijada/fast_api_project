@@ -51,7 +51,7 @@ form {
     justify-content: center;
 }
 
-button[type="submit"] {
+.button {
     padding: 10px 20px;
     background-color: #4CAF50;
     color: white;
@@ -61,40 +61,12 @@ button[type="submit"] {
     width: 200px;
 }
 
-.button[type="submit"]:hover {
-    background-color: #45a049;
+.button:active {
+    background: #007a63;
 }
 
-.button.loading {
-    background-color: #CCC;
-    padding-right: 40px;
-}
-.button.loading:after {
-    content: "";
-    position: absolute;
-    border-radius: 100%;
-    right: 6px;
-    top: 50%;
-    width: 0px;
-    height: 0px;
-    margin-top: -2px;
-    border: 2px solid rgba(255,255,255,0.5);
-    border-left-color: #FFF;
-    border-top-color: #FFF;
-    animation: spin .6s infinite linear, grow .3s forwards ease-out;
-}
-@keyframes spin {
-    to {
-        transform: rotate(359deg);
-    }
-}
-@keyframes grow {
-    to {
-        width: 14px;
-        height: 14px;
-        margin-top: -8px;
-        right: 13px;
-    }
+.button:hover {
+    background-color: #45a049;
 }
 
 table {
@@ -127,3 +99,41 @@ tbody tr:hover {
         margin-top: 30px;
         font-style: italic;
         color: #888888;
+}
+
+.loader{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f7f9fb;
+    transition: opacity 0.75s, visibility 0.75s;
+}
+
+.loader-hidden{
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader::after{
+    content: "";
+    width: 75px;
+    height: 75px;
+    border: 15px solid #dddddd;
+    border-top-color: green;
+    border-radius: 50%;
+    animation: loading 0.75s ease infinite;
+}
+
+@keyframes loading {
+    from{
+        transform: rotate(0turn);
+    }
+    to{
+        transform: rotate(1turn);
+    }
+}

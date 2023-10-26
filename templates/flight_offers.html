@@ -9,18 +9,34 @@
 <body>
     <h1>FLIGHT OFFERS</h1>
 
-    {% if flight_offers %}
-    <h3>From {{ departure }} to {{ arrival }}</h3>
-    <h3>Date of departure: {{ date_from.strftime("%d.%m.%Y") }}</h3>
-    {% if date_to %}
-        <h3>Date of return: {{ date_to.strftime("%d.%m.%Y") }}</h3>
+    {% if invalid_no_of_passengers %}
+    <p class="error-message">
+        Your request cannot be processed as the total number of passengers exceeds the maximum limit of 9. Please submit a new request.
+    </p>
+    {% elif invalid_dates %}
+    <p class="error-message">
+        Your request cannot be processed as the "Date From" is later than the "Date To". Please submit a new request.
+    </p>
+    {% elif not flight_offers %}
+    <p class="error-message">
+        Flight offers matching your submitted request could not be located. Please submit a new request.
+    </p>
     {% endif %}
 
     <form action="/" method="get">
         <div class="button-container">
-            <button type="submit">Search for other flights</button>
+            <button class="button">
+                <span>Search For Other Flights</span>
+            </button>
         </div>
     </form>
+
+    {% if flight_offers %}
+    <h3>From {{ departure }} to {{ arrival }}</h3>
+    <h3>Date of departure: {{ date_from.strftime("%d.%m.%Y") }}</h3>
+    {% if date_to %}
+    <h3>Date of return: {{ date_to.strftime("%d.%m.%Y") }}</h3>
+    {% endif %}
 
     <table>
         <thead>
@@ -29,10 +45,10 @@
                 <th>Destination airport</th>
                 <th>Departure distance (km)</th>
                 {% if date_to %}
-                    <th>Return distance (km)</th>
-                    <th>Date of departure/return</th>
+                <th>Return distance (km)</th>
+                <th>Date of departure/return</th>
                 {% else %}
-                    <th>Date of departure</th>
+                <th>Date of departure</th>
                 {% endif %}
                 <th>Number of stops</th>
                 <th>Number of passengers</th>
@@ -46,26 +62,26 @@
                 <td>{{ offer.departure_airport }}</td>
                 <td>{{ offer.arrival_airport }}</td>
                 <td>
-                  {% if not offer.departure_geo_distance %}
+                    {% if not offer.departure_geo_distance %}
                     <small><em>Insufficient data is available</em></small>
-                  {% else %}
+                    {% else %}
                     {{ offer.departure_geo_distance }}
-                  {% endif %}
+                    {% endif %}
                 </td>
-                    {% if offer.return_date %}
+                {% if offer.return_date %}
                 <td>
-                  {% if not offer.return_geo_distance %}
+                    {% if not offer.return_geo_distance %}
                     <small><em>Insufficient data is available</em></small>
-                  {% else %}
+                    {% else %}
                     {{ offer.return_geo_distance }}
-                  {% endif %}
+                    {% endif %}
                 </td>
                 <td>
-                    {{ offer.departure_date.format("DD.MM.YYYY") }} - {{ offer.return_date.format("DD.MM.YYYY") }}
+                    {{ offer.departure_date.strftime("%d.%m.%Y") }} - {{ offer.return_date.strftime("%d.%m.%Y") }}
                 </td>
                 {% else %}
                 <td>
-                    {{ offer.departure_date.format("DD.MM.YYYY") }}
+                    {{ offer.departure_date.strftime("%d.%m.%Y") }}
                 </td>
                 {% endif %}
                 <td>{{ '-' if offer.no_of_stops == '0' else offer.no_of_stops }}</td>
@@ -76,34 +92,6 @@
             {% endfor %}
         </tbody>
     </table>
-    {% elif invalid_no_of_passengers%}
-        <p class="error-message">Your request cannot be processed as the total number of passengers exceeds maximum limit of 9. Please submit a new request.</p>
-    {% elif invalid_dates%}
-        <p class="error-message">Your request cannot be processed as the "Date From" is later than the "Date To". Please submit a new request.</p>
-    {% else %}
-        <p class="error-message">Flight offers matching your submitted request could not be located. Please submit a new request.</p>
-
-        <form action="/" method="get">
-            <div class="button-container">
-                <button type="submit">Search for other flights</button>
-            </div>
-        </form>
-
     {% endif %}
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-                var dateFromInput = document.getElementById("date_from");
-                var dateToInput = document.getElementById("date_to");
-                var today = new Date();
-                var year = today.getFullYear();
-                var month = String(today.getMonth() + 1).padStart(2, "0");
-                var day = String(today.getDate()).padStart(2, "0");
-                var minDate = year + "-" + month + "-" + day;
-                dateFromInput.min = minDate;
-                dateToInput.min = minDate;
-            });
-        });
-    </script>
 </body>
 </html>

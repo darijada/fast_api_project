@@ -64,10 +64,10 @@ async def get_flight_offers(request_body: FlightRequest) -> List[FlightOffer]:
         flight_offers_json_response = response.json()["data"]
 
         airports_geo_coordinates = get_offer_airports_geolocations(response.json())
-        if None not in airports_geo_coordinates.values():
-            flight_offers_json_response = calculate_and_set_geo_distances(
-                flight_offers_json_response, airports_geo_coordinates
-            )
+
+        flight_offers_json_response = calculate_and_set_geo_distances(
+            flight_offers_json_response, airports_geo_coordinates
+        )
 
         flight_offers = [
             FlightOffer(**extract_flight_info(offer))
@@ -213,9 +213,8 @@ def calculate_and_set_geo_distances(
                         if flight_stop["iataCode"] not in return_airport_iata_codes:
                             return_airport_iata_codes.append(flight_stop["iataCode"])
 
-                if flight["arrival"]["iataCode"] not in departure_airport_iata_codes:
+                if flight["arrival"]["iataCode"] not in return_airport_iata_codes:
                     return_airport_iata_codes.append(flight["arrival"]["iataCode"])
-
             return_distance = calculate_distance(
                 return_airport_iata_codes, airports_geo_coordinates
             )
@@ -244,6 +243,7 @@ def calculate_distance(airport_iata_codes, airports_geo_coordinates) -> float:
         geo_coordinate_one, geo_coordinate_two = airports_geo_coordinates.get(
             airport_code_one
         ), airports_geo_coordinates.get(airport_code_two)
+
         if geo_coordinate_one and geo_coordinate_two:
             distance_total += distance.distance(
                 geo_coordinate_one, geo_coordinate_two

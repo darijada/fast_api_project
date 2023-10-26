@@ -9,7 +9,7 @@
 <body>
     <h1>FLIGHT OFFERS</h1>
 
-    <form action="/submit-form" method="post">
+    <form action="/submit-form" method="post" onsubmit="return validateForm()">
         <div class="form-row">
             <label for="departure">Departure IATA:</label>
             <input type="text" id="departure" name="departure" class="input-medium" required pattern="[A-Z]{3}" title="Please enter a 3-letter uppercase code">
@@ -32,8 +32,11 @@
         </div>
 
         <div class="button-container">
-            <button type="submit" class="button">Search</button>
+            <button class="button" id="searchButton">
+                <span>Search Flights</span>
+            </button>
         </div>
+        <div class="loader loader-hidden"></div>
     </form>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -48,17 +51,33 @@
             dateToInput.min = minDate;
         });
 
-        function removeClass(){
-        myButton.className = myButton.className.replace(new RegExp('(?:^|\\s)loading(?!\\S)'), '');
+        var searchButton = document.getElementById("searchButton");
+        var loader = document.querySelector(".loader");
+
+        function validateForm() {
+            var departureInput = document.getElementById("departure");
+            var arrivalInput = document.getElementById("arrival");
+            var dateFromInput = document.getElementById("date_from");
+            var adultPassengersInput = document.getElementById("adult_passengers");
+
+            if (
+                departureInput.value === "" ||
+                arrivalInput.value === "" ||
+                dateFromInput.value === "" ||
+                adultPassengersInput.value === ""
+            ) {
+                alert("Please fill in all required fields.");
+                return false;
+            }
+
+            showLoader();
+            return true;
         }
 
-        var myButton = document.getElementById('myButton');
-
-
-        myButton.addEventListener("click", function() {
-            myButton.className = myButton.className + ' loading';
-            setTimeout(removeClass, 2000);
-        }, false);
+        function showLoader() {
+            loader.classList.remove("loader-hidden");
+            searchButton.style.display = "none";
+        }
     </script>
 </body>
 </html>

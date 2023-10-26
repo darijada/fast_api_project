@@ -20,6 +20,7 @@ The `.env` file is used to store sensitive configuration data. To create and con
         CLIENT_ID=my_amadeus_api_key
         CLIENT_SECRET=my_amadeus_api_secret
         FLIGHT_OFFERS_URL=https://test.api.amadeus.com/v2/shopping/flight-offers
+        AIRPORT_URL=https://test.api.amadeus.com/v1/reference-data/locations      
         DATABASE_URL=postgresql://username:password@localhost:5432/amadeus_flights
 
 
